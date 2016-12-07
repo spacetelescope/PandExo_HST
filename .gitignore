@@ -3,5 +3,5 @@
 *.html~
 *.p
 *.json~
-#.md~
+*.md~
 .gitignore~
