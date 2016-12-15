@@ -434,12 +434,13 @@ def wfc3_TExoNS(hmag, trdur, numTr, nchan, disperser, scanDirection='Forward', s
     
     return deptherr/1e6, chanrms/1e6, ptsOrbit
 
-def calc_StartWindow(rms, ptsOrbit, numOrbits, depth, inc, aRs, period, tunc, duration=None, offset=0.):
+def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, period, windowSize, ecc=0, w=90., duration=None, offset=0.):
     '''
     Plot earliest and latest possible spectroscopic light curves for given start window size
     
     PARAMETERS
     ----------
+    eventType       : str, 'transit' or 'eclipse'
     rms             : float, light curve root-mean-square
     ptsOrbit        : float, number of frames per HST orbit
     numOrbits       : float, number of HST orbits per visit
@@ -447,7 +448,9 @@ def calc_StartWindow(rms, ptsOrbit, numOrbits, depth, inc, aRs, period, tunc, du
     inc             : float, orbital inclination in degrees
     aRs             : float, Semi-major axis in units of stellar radii (a/R*)
     period          : float, orbital period in days
-    tunc            : float, +/- start time range in minutes
+    windowSize      : float, observation start window size in minutes
+    ecc             : (Optional) float, eccentricity (default is 0)
+    w               : (Optional) float, longitude of periastron (default is 90 degrees)
     duration        : (Optional) float, full transit/eclipse duration in seconds
     offset          : (Optional) float, manual offset in observation start time, in minutes
     
@@ -458,32 +461,40 @@ def calc_StartWindow(rms, ptsOrbit, numOrbits, depth, inc, aRs, period, tunc, du
     
     HISTORY
     -------
-    Written by Kevin Stevenson      October 2016
+    Written by Kevin Stevenson          October 2016
+    Added eccentric orbit handling      December 2016
     '''
     import matplotlib.pyplot as plt
     import batman
     
-    hstperiod   = 96./60/24                 # HST orbital period, days
-    gsacq       = 0.                        # Guide star acquisition time, days
-    punc        = tunc/60./24/period        # Start time range, phase
+    hstperiod   = 96./60/24                 # HST orbital period, in days
+    punc        = windowSize/120./24/period # Half start window size, in phase
     cosi        = np.cos(inc*np.pi/180)     # Cosine of the inclination
     rprs        = np.sqrt(depth)            # Planet-star radius ratio
     if duration == None:                    # Transit duration
         duration    = period/np.pi*np.arcsin(1./aRs*np.sqrt(((1+rprs)**2-(aRs*cosi)**2)/(1-cosi**2)))
-
+        
     params          = batman.TransitParams()
-    params.t0       = 1.                    #time of inferior conjunction
-    params.per      = 1.                    #orbital period
-    params.rp       = rprs                  #planet radius (in units of stellar radii)
-    params.a        = aRs                   #semi-major axis (in units of stellar radii)
-    params.inc      = inc                   #orbital inclination (in degrees)
-    params.ecc      = 0.                    #eccentricity
-    params.w        = 90.                   #longitude of periastron (in degrees)
-    params.u        = [0.0, 0.0]            #limb darkening coefficients
-    params.limb_dark= "quadratic"           #limb darkening model
-
-    phase1      = (period + duration/2. - hstperiod*(numOrbits-2) - hstperiod/2 + offset/24./60)/period
-    phase2      = (period - duration/2. - hstperiod*2 + offset/24./60)/period
+    if eventType == 'transit':
+        midpt       = period
+        params.u    = [0.1, 0.1]            # limb darkening coefficients
+    elif eventType == 'eclipse':
+        midpt       = period/2*(1+4*ecc*np.cos(w*np.pi/180)/np.pi)
+        params.u    = [0.0, 0.0]            # limb darkening coefficients
+    else:
+        print("****HALTED: Unknown event type: %s" % eventType)
+        return
+    params.t0       = midpt/period          # phase of transit/eclipse
+    params.per      = 1.                    # orbital period, units are orbital phase
+    params.rp       = rprs                  # planet radius (in units of stellar radii)
+    params.a        = aRs                   # semi-major axis (in units of stellar radii)
+    params.inc      = inc                   # orbital inclination (in degrees)
+    params.ecc      = ecc                   # eccentricity
+    params.w        = w                     # longitude of periastron (in degrees)
+    params.limb_dark= "quadratic"           # limb darkening model
+    
+    phase1      = (midpt + duration/2. - hstperiod*(numOrbits-2) - hstperiod/2 + offset/24./60)/period
+    phase2      = (midpt - duration/2. - hstperiod*2 + offset/24./60)/period
     minphase    = (phase1+phase2)/2-punc
     maxphase    = (phase1+phase2)/2+punc
 
