@@ -9,5 +9,5 @@ The included Jupyter Notebook tutorial demonstrates how to use PandExo to:
     2. Predict transmission/emission spectrum uncertainties, and
     3. Determine the observation start window
     
-for any system observed with HST/WFC3 using the G102 & G141 grisms. The current implementation scales the measured WFC3 flux and variance from existing observations and has been shown to be reliable against previously-published results.
+for any system observed with HST/WFC3 using the G102 & G141 grisms. The current implementation scales the measured flux, variance, and exposure time values from previously-observed systems, computes the expected rms per spectrophotometric channel, and estimates the transit/eclipse depth error based on the anticipated number of valid in- and out-of-transit data points.  The uncertainty estimates depend on the orbital properties of the system, instrument configuration, and observation duration.  The code assumes Gaussian-distributed white noise and uniform uncertainties over the G102 and G141 grisms; both assumptions are consistent with published results.
 
