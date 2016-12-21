@@ -451,7 +451,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     windowSize      : float, observation start window size in minutes
     ecc             : (Optional) float, eccentricity (default is 0)
     w               : (Optional) float, longitude of periastron (default is 90 degrees)
-    duration        : (Optional) float, full transit/eclipse duration in seconds
+    duration        : (Optional) float, full transit/eclipse duration in days
     offset          : (Optional) float, manual offset in observation start time, in minutes
     
     RETURNS
@@ -471,16 +471,18 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     punc        = windowSize/120./24/period # Half start window size, in phase
     cosi        = np.cos(inc*np.pi/180)     # Cosine of the inclination
     rprs        = np.sqrt(depth)            # Planet-star radius ratio
-    if duration == None:                    # Transit duration
-        duration    = period/np.pi*np.arcsin(1./aRs*np.sqrt(((1+rprs)**2-(aRs*cosi)**2)/(1-cosi**2)))
         
     params          = batman.TransitParams()
     if eventType == 'transit':
         midpt       = period
-        params.u    = [0.1, 0.1]            # limb darkening coefficients
+        b           = aRs*cosi*(1-ecc**2)/(1+ecc*np.sin(w*np.pi/180)) # Impact parameter
+        sfactor     = np.sqrt(1-ecc**2)/(1+ecc*np.sin(w*np.pi/180))   # Account for planet speed on eccentric orbits
+        params.u    = [0.1, 0.1]                                      # limb darkening coefficients
     elif eventType == 'eclipse':
         midpt       = period/2*(1+4*ecc*np.cos(w*np.pi/180)/np.pi)
-        params.u    = [0.0, 0.0]            # limb darkening coefficients
+        b           = aRs*cosi*(1-ecc**2)/(1-ecc*np.sin(w*np.pi/180)) # Impact parameter
+        sfactor     = np.sqrt(1-ecc**2)/(1-ecc*np.sin(w*np.pi/180))   # Account for planet speed on eccentric orbits
+        params.u    = [0.0, 0.0]                                      # limb darkening coefficients
     else:
         print("****HALTED: Unknown event type: %s" % eventType)
         return
@@ -493,6 +495,8 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     params.w        = w                     # longitude of periastron (in degrees)
     params.limb_dark= "quadratic"           # limb darkening model
     
+    if duration == None:                    # Transit/eclipse duration
+        duration = period/np.pi*np.arcsin(1./aRs*np.sqrt(((1+rprs)**2-(aRs*cosi)**2)/(1-cosi**2)))*sfactor
     phase1      = (midpt + duration/2. - hstperiod*(numOrbits-2) - hstperiod/2 + offset/24./60)/period
     phase2      = (midpt - duration/2. - hstperiod*2 + offset/24./60)/period
     minphase    = (phase1+phase2)/2-punc
@@ -520,21 +524,21 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     plt.figure(1, figsize=(12,4))
     plt.clf()
     plt.subplot(121)
-    plt.title('Earliest Start Time')
+    plt.title('Earliest Start Phase', size=12)
     plt.errorbar(obsphase1, obstr1, rms, fmt='go')
     plt.plot(phase1, trmodel1, 'b-', lw=2)
     ylim1   = plt.ylim()
     xlim1   = plt.xlim()
-    plt.ylabel("Flux")
-    plt.xlabel("Orbital Phase")
+    plt.ylabel("Normalized Flux", size=12)
+    plt.xlabel("Orbital Phase", size=12)
     plt.subplot(122)
-    plt.title('Latest Start Time')
+    plt.title('Latest Start Phase', size=12)
     plt.errorbar(obsphase2, obstr2, rms, fmt='ro')
     plt.plot(phase2, trmodel2, 'b-', lw=2)
     ylim2   = plt.ylim()
     xlim2   = plt.xlim()
-    plt.ylabel("Flux")
-    plt.xlabel("Orbital Phase")
+    plt.ylabel("Normalized Flux", size=12)
+    plt.xlabel("Orbital Phase", size=12)
     #Put both subplots onto same x,y scale
     ylim    = [np.min((ylim1[0],ylim2[0])), np.max((ylim1[1],ylim2[1]))]
     xlim    = [np.min((xlim1[0],xlim2[0])), np.max((xlim1[1],xlim2[1]))]
@@ -543,6 +547,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     plt.subplot(121)
     plt.ylim(ylim)
     plt.xlim(xlim)
+    plt.tight_layout()
     
     return minphase, maxphase
 
@@ -606,11 +611,12 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None):
     plt.figure(1, figsize=(12,4))
     plt.clf()
     plt.plot(mwave, mspec, '-k')
-    plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8, label='Simulated Spectrum')
+    plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8, label='Simulated WASP-43b Spectrum')
     plt.xlim(wmin, wmax)
     plt.ylim(np.min(binspec)-2*deptherr, np.max(binspec)+2*deptherr)
     plt.legend(loc='upper left')
-    plt.xlabel("Wavelength ($\mu m$)")
-    plt.ylabel("Depth")
+    plt.xlabel("Wavelength ($\mu m$)",size=12)
+    plt.ylabel("Depth",size=12)
+    plt.tight_layout()
     
     return
