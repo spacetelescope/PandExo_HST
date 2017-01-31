@@ -189,7 +189,7 @@ def wfc3_GuessParams(hmag, disperser, scanDirection, subarray, obsTime, maxScanH
             # Exposure time should be less than 2.5 minutes to achieve good time resolution
             ptsOrbit    = np.floor(obsTime/tottime)
             dutyCycle   = (exptime*(ptsOrbit-1))/50./60*100
-            if (dutyCycle > maxDutyCycle) and (exptime < maxExptime):
+            if (dutyCycle > maxDutyCycle) and (exptime < maxExptime) and (scanHeight < maxScanHeight):
                 maxDutyCycle    = dutyCycle
                 bestsampseq     = samp_seq
                 bestnsamp       = nsamp
@@ -523,7 +523,8 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     
     plt.figure(None, figsize=(12,4))
     plt.clf()
-    plt.subplot(121)
+    a=plt.subplot(121)
+    a.yaxis.set_major_formatter(plt.matplotlib.ticker.FormatStrFormatter('%.4f'))
     plt.title('Earliest Start Phase', size=12)
     plt.errorbar(obsphase1, obstr1, rms, fmt='go')
     plt.plot(phase1, trmodel1, 'b-', lw=2)
@@ -531,7 +532,8 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     xlim1   = plt.xlim()
     plt.ylabel("Normalized Flux", size=12)
     plt.xlabel("Orbital Phase", size=12)
-    plt.subplot(122)
+    b=plt.subplot(122)
+    b.yaxis.set_major_formatter(plt.matplotlib.ticker.FormatStrFormatter('%.4f'))
     plt.title('Latest Start Phase', size=12)
     plt.errorbar(obsphase2, obstr2, rms, fmt='ro')
     plt.plot(phase2, trmodel2, 'b-', lw=2)
@@ -617,7 +619,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, lab
     plt.ylim(np.min(binspec)-2*deptherr, np.max(binspec)+2*deptherr)
     if labels is not None: plt.legend(labels, loc='upper left')
     plt.xlabel("Wavelength ($\mu m$)",size=12)
-    plt.ylabel("Depth",size=12)
+    plt.ylabel("Depth (ppm)",size=12)
     plt.tight_layout()
     
     return
