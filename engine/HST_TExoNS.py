@@ -521,7 +521,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     m           = batman.TransitModel(params, obsphase2)
     obstr2      = m.light_curve(params) + np.random.normal(0, rms, obsphase2.shape)
     
-    plt.figure(1, figsize=(12,4))
+    plt.figure(None, figsize=(12,4))
     plt.clf()
     plt.subplot(121)
     plt.title('Earliest Start Phase', size=12)
@@ -551,7 +551,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     
     return minphase, maxphase
 
-def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None):
+def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, labels=None):
     '''
     Plot exoplanet transmission/emission spectrum
     
@@ -563,6 +563,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None):
     deptherr        : float or array of length nchan, simulated transit/eclipse depth uncertainty
     nchan           : float, number of spectrophotometric channels
     smooth          : (Optional) float, length of smoothing kernel
+    labels          : (Optional) Legend labels: ['Model name', 'Simulated obs. name']
         
     HISTORY
     -------
@@ -608,13 +609,13 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None):
         binspec[i]  = np.mean(mspec[ispec])
     binspec    += np.random.normal(0,deptherr,nchan)
     
-    plt.figure(1, figsize=(12,4))
+    plt.figure(None, figsize=(12,4))
     plt.clf()
     plt.plot(mwave, mspec, '-k')
-    plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8, label='Simulated WASP-43b Spectrum')
+    plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8)
     plt.xlim(wmin, wmax)
     plt.ylim(np.min(binspec)-2*deptherr, np.max(binspec)+2*deptherr)
-    plt.legend(loc='upper left')
+    if labels is not None: plt.legend(labels, loc='upper left')
     plt.xlabel("Wavelength ($\mu m$)",size=12)
     plt.ylabel("Depth",size=12)
     plt.tight_layout()
