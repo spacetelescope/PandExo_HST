@@ -558,7 +558,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     
     return minphase, maxphase
 
-def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, labels=None):
+def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, labels=None, fignum=None):
     '''
     Plot exoplanet transmission/emission spectrum
     
@@ -571,6 +571,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, lab
     nchan           : float, number of spectrophotometric channels
     smooth          : (Optional) float, length of smoothing kernel
     labels          : (Optional) Legend labels: ['Model name', 'Simulated obs. name']
+    fignum          : (Optional) Figure number
         
     HISTORY
     -------
@@ -616,7 +617,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, lab
         binspec[i]  = np.mean(mspec[ispec])
     binspec    += np.random.normal(0,deptherr,nchan)
     
-    plt.figure(None, figsize=(12,4))
+    plt.figure(fignum, figsize=(12,4))
     plt.clf()
     plt.plot(mwave, mspec, '-k')
     plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8)
@@ -624,7 +625,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, lab
     plt.ylim(np.min(binspec)-2*deptherr, np.max(binspec)+2*deptherr)
     if labels is not None: plt.legend(labels, loc='upper left')
     plt.xlabel("Wavelength ($\mu m$)",size=12)
-    plt.ylabel("Depth (ppm)",size=12)
+    plt.ylabel("Depth",size=12)
     plt.tight_layout()
     
     return
