@@ -439,7 +439,7 @@ def wfc3_TExoNS(hmag, trdur, numTr, nchan, disperser, scanDirection='Forward', s
     
     return deptherr/1e6, chanrms/1e6, ptsOrbit
 
-def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, period, windowSize, ecc=0, w=90., duration=None, offset=0.):
+def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, period, windowSize, ecc=0, w=90., duration=None, offset=0., useFirstOrbit=False):
     '''
     Plot earliest and latest possible spectroscopic light curves for given start window size
     
@@ -458,6 +458,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     w               : (Optional) float, longitude of periastron (default is 90 degrees)
     duration        : (Optional) float, full transit/eclipse duration in days
     offset          : (Optional) float, manual offset in observation start time, in minutes
+    useFirstOrbit   : (Optional) bool, whether to use first orbit 
     
     RETURNS
     -------
@@ -466,8 +467,9 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     
     HISTORY
     -------
-    Written by Kevin Stevenson          October 2016
-    Added eccentric orbit handling      December 2016
+    Written by Kevin Stevenson           October 2016
+    Added eccentric orbit handling       December 2016
+    Added option for useFirstOrbit, IJMC April 2017
     '''
     import matplotlib.pyplot as plt
     import batman
@@ -502,7 +504,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     
     if duration == None:                    # Transit/eclipse duration
         duration = period/np.pi*np.arcsin(1./aRs*np.sqrt(((1+rprs)**2-(aRs*cosi)**2)/(1-cosi**2)))*sfactor
-    phase1      = (midpt + duration/2. - hstperiod*(numOrbits-2) - hstperiod/2 + offset/24./60)/period
+    phase1      = (midpt + duration/2. - hstperiod*(numOrbits-2-useFirstOrbit) - hstperiod/2 + offset/24./60)/period
     phase2      = (midpt - duration/2. - hstperiod*2 + offset/24./60)/period
     minphase    = (phase1+phase2)/2-punc
     maxphase    = (phase1+phase2)/2+punc
@@ -510,8 +512,8 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     #Plot extremes of possible HST observations
     npts        = 4 * ptsOrbit * numOrbits
     phdur       = duration/period
-    phase1      = np.linspace(minphase+hstperiod/period,minphase+hstperiod/period*(numOrbits-1)+hstperiod/period/2,npts)
-    phase2      = np.linspace(maxphase+hstperiod/period,maxphase+hstperiod/period*(numOrbits-1)+hstperiod/period/2,npts)
+    phase1      = np.linspace(minphase+(1-useFirstOrbit)*hstperiod/period,minphase+hstperiod/period*(numOrbits-1)+hstperiod/period/2,npts)
+    phase2      = np.linspace(maxphase+(1-useFirstOrbit)*hstperiod/period,maxphase+hstp
     m           = batman.TransitModel(params, phase1)
     trmodel1    = m.light_curve(params)
     m           = batman.TransitModel(params, phase2)
