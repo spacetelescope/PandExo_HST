@@ -458,6 +458,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     w               : (Optional) float, longitude of periastron (default is 90 degrees)
     duration        : (Optional) float, full transit/eclipse duration in days
     offset          : (Optional) float, manual offset in observation start time, in minutes
+    fignum          : (Optional) Figure number
     
     RETURNS
     -------
