@@ -439,7 +439,8 @@ def wfc3_TExoNS(hmag, trdur, numTr, nchan, disperser, scanDirection='Forward', s
     
     return deptherr/1e6, chanrms/1e6, ptsOrbit
 
-def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, period, windowSize, ecc=0, w=90., duration=None, offset=0., useFirstOrbit=False):
+
+def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, period, windowSize, ecc=0, w=90., duration=None, offset=0., figNum=None, useFirstOrbit=False):
     '''
     Plot earliest and latest possible spectroscopic light curves for given start window size
     
@@ -458,6 +459,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     w               : (Optional) float, longitude of periastron (default is 90 degrees)
     duration        : (Optional) float, full transit/eclipse duration in days
     offset          : (Optional) float, manual offset in observation start time, in minutes
+    fignum          : (Optional) Figure number
     useFirstOrbit   : (Optional) bool, whether to use first orbit 
     
     RETURNS
@@ -513,7 +515,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     npts        = 4 * ptsOrbit * numOrbits
     phdur       = duration/period
     phase1      = np.linspace(minphase+(1-useFirstOrbit)*hstperiod/period,minphase+hstperiod/period*(numOrbits-1)+hstperiod/period/2,npts)
-    phase2      = np.linspace(maxphase+(1-useFirstOrbit)*hstperiod/period,maxphase+hstp
+    phase2      = np.linspace(maxphase+(1-useFirstOrbit)*hstperiod/period,maxphase+hstperiod/period*(numOrbits-1)+hstperiod/period/2,npts)
     m           = batman.TransitModel(params, phase1)
     trmodel1    = m.light_curve(params)
     m           = batman.TransitModel(params, phase2)
@@ -528,7 +530,7 @@ def calc_StartWindow(eventType, rms, ptsOrbit, numOrbits, depth, inc, aRs, perio
     m           = batman.TransitModel(params, obsphase2)
     obstr2      = m.light_curve(params) + np.random.normal(0, rms, obsphase2.shape)
     
-    plt.figure(None, figsize=(12,4))
+    plt.figure(figNum, figsize=(12,4))
     plt.clf()
     a=plt.subplot(121)
     a.yaxis.set_major_formatter(plt.matplotlib.ticker.FormatStrFormatter('%.4f'))
@@ -625,7 +627,7 @@ def plot_PlanSpec(specfile, w_unit, disperser, deptherr, nchan, smooth=None, lab
     plt.errorbar(binwave, binspec, deptherr, fmt='bo', ms=8)
     plt.xlim(wmin, wmax)
     plt.ylim(np.min(binspec)-2*deptherr, np.max(binspec)+2*deptherr)
-    if labels is not None: plt.legend(labels, loc='upper left')
+    if labels is not None: plt.legend(labels, loc='upper left', fontsize=12)
     plt.xlabel("Wavelength ($\mu m$)",size=12)
     plt.ylabel("Depth",size=12)
     plt.tight_layout()
